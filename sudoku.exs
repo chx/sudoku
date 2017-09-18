@@ -78,7 +78,7 @@ defmodule Sudoku do
     )
   end
 
-  defp unsolved(values), do: Enum.filter(values, fn {_, d} -> length(d) > 1 end)
+  defp unsolved(values), do: Enum.filter(values, &((elem(&1, 1) |> length) > 1))
 
   defp finished(values), do: {(if Enum.empty?(unsolved(values)), do: :halt, else: :cont), values}
 
