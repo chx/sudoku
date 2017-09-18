@@ -105,7 +105,7 @@ defmodule Sudoku do
   end
 
   def display(values) do
-    {_, longest} = Enum.max_by(values, fn {_, x} -> length(x) end)
+    {_, longest} = Enum.max_by(values, &value_length/1)
     width = length(longest) + 1
     square_line = String.duplicate("-", width * 3 + 1)
                   |> to_charlist()
