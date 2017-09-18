@@ -91,15 +91,13 @@ defmodule Sudoku do
       values,
       fn d, values ->
         try do
-          {should_stop, values} = search(assign({s, d}, values))
-          should_stop = If Enum.empty?(unsolved(values)), do: :halt, else: should_stop
-          {should_stop, values}
+          search(assign({s, d}, values))
         catch
           :contradiction -> {:cont, values}
         end
       end
     )
-    {:cont, values}
+    {(if Enum.empty?(unsolved(values)), do: :halt, else: :cont), values}
   end
 
   def display(values) do
