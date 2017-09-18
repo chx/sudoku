@@ -78,7 +78,9 @@ defmodule Sudoku do
     )
   end
 
-  defp unsolved(values), do: Enum.filter(values, &((elem(&1, 1) |> length) > 1))
+  defp value_length({_, value}), do: length(value)
+
+  defp unsolved(values), do: Enum.filter(values, &(value_length(&1) > 1))
 
   defp finished(values), do: {(if Enum.empty?(unsolved(values)), do: :halt, else: :cont), values}
 
@@ -87,7 +89,7 @@ defmodule Sudoku do
   def search(values, []), do: {:halt, values}
 
   def search(values, unsolved) do
-    {s, digits} = Enum.min_by(unsolved, &(elem(&1, 1) |> length))
+    {s, digits} = Enum.min_by(unsolved, &value_length/1)
     Enum.reduce_while(
       digits,
       values,
