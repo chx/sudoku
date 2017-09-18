@@ -38,16 +38,16 @@ defmodule Sudoku do
     |> Enum.reduce(values, &assign/2)
   end
 
-  def assign({s, d}, values) when d in @digits, do: Enum.reduce(values[s] -- [d], values, &(eliminate(s, &1, &2)))
+  defp assign({s, d}, values) when d in @digits, do: Enum.reduce(values[s] -- [d], values, &(eliminate(s, &1, &2)))
 
-  def assign(_, values), do: values
+  defp assign(_, values), do: values
 
-  def eliminate(s, d, values), do: eliminate(s, d, values, d in values[s])
+  defp eliminate(s, d, values), do: eliminate(s, d, values, d in values[s])
 
   # Already eliminated
-  def eliminate(_, _, values, false), do: values
+  defp eliminate(_, _, values, false), do: values
 
-  def eliminate(s, d, values, true) do
+  defp eliminate(s, d, values, true) do
     # Eliminate d from values[s]
     Map.update(values, s, nil, &(&1 -- [d]))
     |> eliminate_from_peers(s)
@@ -55,7 +55,7 @@ defmodule Sudoku do
   end
 
   # (1) If a square s is reduced to one value, then eliminate it from the peers.
-  def eliminate_from_peers(values, s) do
+  defp eliminate_from_peers(values, s) do
     case values[s] do
       [] -> throw :contradiction
       [h | []] -> Enum.reduce(@peers[s], values, &(eliminate(&1, h, &2)))
@@ -64,7 +64,7 @@ defmodule Sudoku do
   end
 
   # (2) If a unit u is reduced to only one place for a value d, then put it there.
-  def eliminate_from_units(values, s, d) do
+  defp eliminate_from_units(values, s, d) do
     Enum.reduce(
       @units[s],
       values,
@@ -78,7 +78,9 @@ defmodule Sudoku do
     )
   end
 
-  def search(values), do: search(values, Enum.filter(values, fn {_, d} -> length(d) > 1 end))
+  defp unsolved(values), do: Enum.filter(values, fn {_, d} -> length(d) > 1 end)
+
+  def search(values), do: search(values, unsolved(values))
 
   def search(values, []), do: {:halt, values}
 
@@ -89,7 +91,9 @@ defmodule Sudoku do
       values,
       fn d, values ->
         try do
-          search(assign({s, d}, values))
+          {should_stop, values} = search(assign({s, d}, values))
+          should_stop = If Enum.empty?(unsolved(values)), do: :halt, else: should_stop
+          {should_stop, values}
         catch
           :contradiction -> {:cont, values}
         end
