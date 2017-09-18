@@ -7,7 +7,7 @@ defmodule Sudoku.Helpers do
   # this is for testing and inspecting.
   def to_list(a) when is_list(a), do: Enum.map(a, &to_list/1)
   def to_list(a) when is_map(a), do: for {k, v} <- a, into: %{}, do: {to_list(k), to_list(v)}
-  def to_list(a) when is_tuple(a), do: Tuple.to_list(a)
+  def to_list(a) when is_tuple(a), do: to_list(Tuple.to_list(a))
   def to_list(a), do: a
 end
 
@@ -84,20 +84,18 @@ defmodule Sudoku do
 
   def search(values, unsolved) do
     {s, digits} = Enum.min_by(unsolved, fn {_, d} -> length(d) end)
-    {
-      :cont,
-      Enum.reduce_while(
-        digits,
-        values,
-        fn d, values ->
-          try do
-            search(assign({s, d}, values))
-          catch
-            :contradiction -> {:cont, values}
-          end
+    Enum.reduce_while(
+      digits,
+      values,
+      fn d, values ->
+        try do
+          search(assign({s, d}, values))
+        catch
+          :contradiction -> {:cont, values}
         end
-      )
-    }
+      end
+    )
+    {:cont, values}
   end
 
   def display(values) do
