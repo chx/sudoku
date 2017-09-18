@@ -84,10 +84,12 @@ defmodule Sudoku do
 
   defp finished(values), do: {(if Enum.empty?(unsolved(values)), do: :halt, else: :cont), values}
 
-  def search(values) do
-    {s, digits} = values
-    |> unsolved
-    |> Enum.min_by(&value_length/1)
+  defp search(values), do: search(values, unsolved(values))
+
+  defp search(values, []), do: {:halt, values}
+
+  defp search(values, unsolved) do
+    {s, digits} = Enum.min_by(unsolved, &value_length/1)
     Enum.reduce_while(
       digits,
       values,
@@ -121,6 +123,12 @@ defmodule Sudoku do
     |> Enum.intersperse("\n")
   end
 
+  def solve(grid) do
+    {_, v} = parse_grid(grid)
+    |> search
+    display(v)
+  end
+
   def test do
     81 = length(@squares)
     27 = length(@unitlist)
@@ -143,8 +151,7 @@ end
 
 Sudoku.test
 grid1 = '003020600900305001001806400008102900700000008006708200002609500800203009005010300'
-IO.puts Sudoku.display(Sudoku.parse_grid(grid1))
+IO.puts Sudoku.solve(grid1)
 
 grid2 = '4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......'
-{_, v} = Sudoku.search(Sudoku.parse_grid(grid2))
-IO.puts Sudoku.display(v)
+IO.puts Sudoku.solve(grid2)
