@@ -123,12 +123,6 @@ defmodule Sudoku do
     |> Enum.intersperse("\n")
   end
 
-  def solve(grid) do
-    {_, v} = parse_grid(grid)
-    |> search
-    display(v)
-  end
-
   def test do
     81 = length(@squares)
     27 = length(@unitlist)
@@ -151,7 +145,14 @@ end
 
 Sudoku.test
 grid1 = '003020600900305001001806400008102900700000008006708200002609500800203009005010300'
-IO.puts Sudoku.solve(grid1)
+{_, values} = Sudoku.parse_grid(grid1)
+|> Sudoku.search
+|> Sudoku.display
+|> IO.puts
 
 grid2 = '4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......'
-IO.puts Sudoku.solve(grid2)
+{_, values} = Sudoku.parse_grid(grid2)
+|> Sudoku.search
+values
+|> Sudoku.display
+|> IO.puts
