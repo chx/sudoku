@@ -75,7 +75,7 @@ defmodule Sudoku do
       @units[s],
       values,
       fn u, v ->
-        case Enum.filter(u, &(d in values[&1])) do
+        case Enum.filter(u, &(d in v[&1])) do
           [] ->
             throw :contradiction
           [h] -> assign({h, d}, v)
