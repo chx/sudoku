@@ -47,49 +47,49 @@ defmodule Sudoku do
 
   defp assign(_, values), do: values
 
-defp eliminate(s, d, values), do: eliminate(s, d, values, d in values[s])
+  defp eliminate(s, d, values), do: eliminate(s, d, values, d in values[s])
 
-# Already eliminated
-defp eliminate(_, _, values, false), do: values
+  # Already eliminated
+  defp eliminate(_, _, values, false), do: values
 
-defp eliminate(s, d, values, true) do
-  # Eliminate d from values[s]
-  Map.update(values, s, nil, &(&1 -- [d]))
-  |> eliminate_from_peers(s)
-  |> eliminate_from_units(s, d)
-end
-
-# (1) If a square s is reduced to one value, then eliminate it from the peers.
-defp eliminate_from_peers(values, s) do
-  case values[s] do
-    [] ->
-      throw :contradiction
-    [h] -> Enum.reduce(@peers[s], values, &(eliminate(&1, h, &2)))
-    _ -> values
+  defp eliminate(s, d, values, true) do
+    # Eliminate d from values[s]
+    Map.update(values, s, nil, &(&1 -- [d]))
+    |> eliminate_from_peers(s)
+    |> eliminate_from_units(s, d)
   end
-end
 
-# (2) If a unit u is reduced to only one place for a value d, then put it there.
-defp eliminate_from_units(values, s, d) do
-  Enum.reduce(
-    @units[s],
-    values,
-    fn u, v ->
-      case Enum.filter(u, &(d in values[&1])) do
-        [] ->
-          throw :contradiction
-        [h] -> assign({h, d}, v)
-        _ -> v
-      end
+  # (1) If a square s is reduced to one value, then eliminate it from the peers.
+  defp eliminate_from_peers(values, s) do
+    case values[s] do
+      [] ->
+        throw :contradiction
+      [h] -> Enum.reduce(@peers[s], values, &(eliminate(&1, h, &2)))
+      _ -> values
     end
-  )
-end
+  end
 
-defp value_length({_, value}), do: length(value)
+  # (2) If a unit u is reduced to only one place for a value d, then put it there.
+  defp eliminate_from_units(values, s, d) do
+    Enum.reduce(
+      @units[s],
+      values,
+      fn u, v ->
+        case Enum.filter(u, &(d in values[&1])) do
+          [] ->
+            throw :contradiction
+          [h] -> assign({h, d}, v)
+          _ -> v
+        end
+      end
+    )
+  end
 
-defp unsolved(values), do: Enum.filter(values, &(value_length(&1) > 1))
+  defp value_length({_, value}), do: length(value)
 
-defp finished(values), do: {(if Enum.empty?(unsolved(values)), do: :halt, else: :cont), values}
+  defp unsolved(values), do: Enum.filter(values, &(value_length(&1) > 1))
+
+  defp finished(values), do: {(if Enum.empty?(unsolved(values)), do: :halt, else: :cont), values}
 
   def search(values), do: search(values, unsolved(values))
 
