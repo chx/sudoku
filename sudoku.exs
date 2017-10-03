@@ -84,7 +84,7 @@ defmodule Sudoku do
 
   defp finished(values), do: {(if Enum.empty?(unsolved(values)), do: :halt, else: :cont), values}
 
-  defp search(values), do: search(values, unsolved(values))
+  def search(values), do: search(values, unsolved(values))
 
   defp search(values, []), do: {:halt, values}
 
@@ -147,6 +147,7 @@ Sudoku.test
 grid1 = '003020600900305001001806400008102900700000008006708200002609500800203009005010300'
 {_, values} = Sudoku.parse_grid(grid1)
 |> Sudoku.search
+values
 |> Sudoku.display
 |> IO.puts
 
