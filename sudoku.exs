@@ -1,10 +1,4 @@
-defmodule Sudoku do
-
-  @digits   '123456789'
-  @rows     'ABCDEFGHI'
-  @cols     @digits
-
-  #defmodule Helpers do
+defmodule Sudoku.Helpers do
   # wrapping in a list is necessary to make it work with single characters
   # and charlists both.
   def cross(a, b) do
@@ -15,31 +9,34 @@ defmodule Sudoku do
   def to_list(a) when is_map(a), do: for {k, v} <- a, into: %{}, do: {to_list(k), to_list(v)}
   def to_list(a) when is_tuple(a), do: to_list(Tuple.to_list(a))
   def to_list(a), do: a
-  #end
+end
 
 
-  def squares, do: cross(@rows, @cols)
+defmodule Sudoku do
+  import Sudoku.Helpers
 
-  def unitlist() do
-    (for c <- @cols, do: cross(@rows, c)) ++
+  @digits   '123456789'
+  @rows     'ABCDEFGHI'
+  @cols     @digits
+
+  @squares cross(@rows, @cols)
+
+  @unitlist (for c <- @cols, do: cross(@rows, c)) ++
       (for r <- @rows, do: cross(r, @cols)) ++
         (for rs <- ['ABC', 'DEF', 'GHI'], cs <- ['123', '456', '789'], do: cross(rs, cs))
-  end
 
-  def units, do: for s <- squares, into: %{}, do: {s, (for u <- unitlist, s in u, do: u)}
+  @units for s <- @squares, into: %{}, do: {s, (for u <- @unitlist, s in u, do: u)}
 
-  def peers() do
-    for s <- squares, into: %{},
+  @peers for s <- @squares, into: %{},
       do: {s,
-        units[s]
+        @units[s]
         |> List.flatten
         |> Enum.uniq
         |> List.delete(s)}
-  end
 
   def parse_grid(grid) do
-    values = for s <- squares, into: %{}, do: {s, @digits}
-    Enum.zip(squares, grid)
+    values = for s <- @squares, into: %{}, do: {s, @digits}
+    Enum.zip(@squares, grid)
     |> Enum.reduce(values, &assign/2)
   end
 
@@ -65,9 +62,9 @@ end
 # (1) If a square s is reduced to one value, then eliminate it from the peers.
 defp eliminate_from_peers(values, s) do
   case values[s] do
-    [] -> 
+    [] ->
       throw :contradiction
-    [h] -> Enum.reduce(peers[s], values, &(eliminate(&1, h, &2)))
+    [h] -> Enum.reduce(@peers[s], values, &(eliminate(&1, h, &2)))
     _ -> values
   end
 end
@@ -75,11 +72,11 @@ end
 # (2) If a unit u is reduced to only one place for a value d, then put it there.
 defp eliminate_from_units(values, s, d) do
   Enum.reduce(
-    units[s],
+    @units[s],
     values,
     fn u, v ->
       case Enum.filter(u, &(d in values[&1])) do
-        [] -> 
+        [] ->
           throw :contradiction
         [h] -> assign({h, d}, v)
         _ -> v
@@ -100,21 +97,21 @@ defp finished(values), do: {(if Enum.empty?(unsolved(values)), do: :halt, else: 
   defp search(values, unsolvedv) do
     {s, digits} = Enum.min_by(unsolvedv, &value_length/1)
 
-  digits
-  |> Enum.reduce_while(
-    values,
-    fn d, v ->
-      try do
-        {s, d}
-        |> assign(values)
-        |> search
-      catch
-        :contradiction -> 
-          {:cont, v}
+    digits
+    |> Enum.reduce_while(
+      values,
+      fn d, v ->
+        try do
+          {s, d}
+          |> assign(values)
+          |> search
+        catch
+          :contradiction ->
+            {:cont, v}
+        end
       end
-    end
-  )
-  |> finished
+    )
+    |> finished
   end
 
   def display(values) do
@@ -137,21 +134,21 @@ defp finished(values), do: {(if Enum.empty?(unsolved(values)), do: :halt, else: 
   end
 
   def test do
-    81 = length(squares)
-    27 = length(unitlist)
-    true = Enum.all?(for s <- squares, do: length(units[s]) == 3)
-    true = Enum.all?(for s <- squares, do: length(peers[s]) == 20)
+    81 = length(@squares)
+    27 = length(@unitlist)
+    true = Enum.all?(for s <- @squares, do: length(@units[s]) == 3)
+    true = Enum.all?(for s <- @squares, do: length(@peers[s]) == 20)
     units_c2 = [
       ['A2', 'B2', 'C2', 'D2', 'E2', 'F2', 'G2', 'H2', 'I2'],
       ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9'],
       ['A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3']
     ]
-    true = Enum.sort(to_list(units)['C2']) == Enum.sort(units_c2)
+    true = Enum.sort(to_list(@units)['C2']) == Enum.sort(units_c2)
     peers_c2 = [
       'A2', 'B2', 'D2', 'E2', 'F2', 'G2', 'H2', 'I2',
       'C1', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9',
       'A1', 'A3', 'B1', 'B3']
-    true = Enum.sort(to_list(peers)['C2']) == Enum.sort(peers_c2)
+    true = Enum.sort(to_list(@peers)['C2']) == Enum.sort(peers_c2)
     IO.puts "tests passed"
   end
 
